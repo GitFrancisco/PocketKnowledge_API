@@ -26,8 +26,9 @@ router.post('/', async (req, res) => {
         conn.release();
         res.status(201).json({ id: result.insertId });
     } catch (err) {
-        res.status(500).json({ error: 'Erro ao criar um utilizador.' });
+        res.status(500).json({ error: 'Erro ao criar um utilizador.' });   
     }
 });
+
 
 module.exports = router;
