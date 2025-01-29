@@ -8,6 +8,8 @@ const jwt = require("jsonwebtoken");
 const { body, validationResult } = require("express-validator");
 // .env
 require("dotenv").config();
+// Importar o middleware de autenticação
+const authenticateToken = require("../middlewares/authMiddleware");
 
 // Secret Key para o JWT
 const SECRET_KEY_JWT = process.env.SECRET_KEY;
@@ -92,7 +94,7 @@ router.post(
         expiresIn: "1h",
       });
 
-      res.json({ message: "Login com sucesso!", token });
+      res.json({token});
     } catch (err) {
       res.status(500).json({ error: "Erro ao fazer login." });
     }
@@ -111,4 +113,31 @@ router.delete("/delete/:id", async (req, res) => {
     res.status(500).json({ error: "Erro ao apagar um utilizador." });
   }
 });
+
+
+
+// Obter um utilizador autenticado
+router.get("/me", authenticateToken, async (req, res) => {
+  try {
+    const conn = await pool.getConnection();
+    // Buscar os dados do utilizador com base no ID extraído do token
+    const [user] = await conn.query(
+      "SELECT id, username, email, Role, created_at FROM users WHERE id = ?",
+      [req.user.id]
+    );
+    conn.release();
+
+    if (!user) {
+      return res.status(404).json({ error: "Utilizador não encontrado." });
+    }
+    // Retornar os dados do utilizador
+    res.json(user);
+  } catch (err) {
+    res.status(500).json({ error: "Erro ao buscar os dados do utilizador." });
+  }
+});
+
+
+
+
 module.exports = router;
