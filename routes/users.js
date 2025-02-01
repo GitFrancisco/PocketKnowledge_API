@@ -9,15 +9,28 @@ const { body, validationResult } = require("express-validator");
 // .env
 require("dotenv").config();
 // Importar o middleware de autenticação
-const { authenticateToken } = require("../middlewares/authMiddleware");
+const { authenticateToken, verifyToken } = require("../middlewares/authMiddleware");
 
 // Secret Key para o JWT
 const SECRET_KEY_JWT = process.env.SECRET_KEY;
 
 // Listar todos os utilizadores
-router.get("/list", async (req, res) => {
+router.get("/list", verifyToken, async (req, res) => {
+  const user_id = req.user.id; // Utilizador autenticado
+  
   try {
     const conn = await pool.getConnection();
+
+    const user_role = await conn.query("SELECT Role FROM users WHERE id = ?", [
+      user_id,
+    ]);
+
+    if (user_role[0].Role != "admin") {
+      return res
+        .status(403)
+        .json({ error: "Apenas administradores podem listar utilizadores." });
+    }
+
     const users = await conn.query(
       "SELECT id, username, email, Role, created_at FROM users"
     );
@@ -102,10 +115,22 @@ router.post(
 );
 
 // Apagar um utilizador
-router.delete("/delete/:id", async (req, res) => {
+router.delete("/delete/:id", verifyToken, async (req, res) => {
+  const user_id = req.user.id; // Utilizador autenticado
   const id = req.params.id;
   try {
     const conn = await pool.getConnection();
+
+    const user_role = await conn.query("SELECT Role FROM users WHERE id = ?", [
+      user_id,
+    ]);
+
+    if (user_role[0].Role != "admin") {
+      return res
+        .status(403)
+        .json({ error: "Apenas administradores podem apagar utilizadores." });
+    }
+
     const result = await conn.query("DELETE FROM users WHERE id = ?", [id]);
     conn.release();
     res.json({ message: "Utilizador apagado com sucesso!" }); // Mensagem de sucesso
@@ -136,7 +161,6 @@ router.get("/me", authenticateToken, async (req, res) => {
     res.status(500).json({ error: "Erro ao buscar os dados do utilizador." });
   }
 });
-
 
 
 
