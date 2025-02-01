@@ -9,7 +9,7 @@ const { body, validationResult } = require("express-validator");
 // .env
 require("dotenv").config();
 // Importar o middleware de autenticação
-const authenticateToken = require("../middlewares/authMiddleware");
+const { authenticateToken } = require("../middlewares/authMiddleware");
 
 // Secret Key para o JWT
 const SECRET_KEY_JWT = process.env.SECRET_KEY;

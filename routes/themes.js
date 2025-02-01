@@ -23,7 +23,7 @@ router.post("/create", async (req, res) => {
       theme,
     ]);
     conn.release();
-    res.status(201).json({ message: "Tema adicionado com sucesso!" }); // Mensagem de sucesso
+    res.status(201).json({ message: "Tema adicionado com sucesso!"}); // Mensagem de sucesso
   } catch (err) {
     res.status(500).json({ error: "Erro ao criar tema." });
   }
@@ -70,5 +70,41 @@ router.delete("/delete/:id", async (req, res) => {
       res.status(500).json({ error: "Erro ao apagar tema." });
     }
   });
+
+// FLASHCARDS-THEMES
+// Criar um novo mapeamento flashcard-tema
+router.post("/flashcard-theme/create", async (req, res) => {
+  try {
+    const { flashcard_id, theme_id } = req.body; // Recebe os IDs do body
+    const conn = await pool.getConnection();
+    const result = await conn.query(
+      "INSERT INTO flashcard_theme (flashcard_id, theme_id) VALUES (?, ?)",
+      [flashcard_id, theme_id]
+    );
+    conn.release();
+    res.status(201).json({ message: "Mapeamento criado com sucesso!" });
+  } catch (err) {
+    res.status(500).json({ error: "Erro ao criar mapeamento." });
+  }
+});
+
+// Listar flashcards de um tema específico
+router.get("/:id/flashcards", async (req, res) => {
+  try {
+    const { id } = req.params; // Recebe o ID do tema
+    const conn = await pool.getConnection();
+    const results = await conn.query(
+      `SELECT f.id, f.question, f.answer, f.created_at, f.user_id 
+       FROM flashcard_theme ft
+       JOIN flashcards f ON ft.flashcard_id = f.id
+       WHERE ft.theme_id = ?`,
+      [id]
+    );
+    conn.release();
+    res.status(200).json(results);
+  } catch (err) {
+    res.status(500).json({ error: "Erro ao listar flashcards do tema." });
+  }
+});
 
 module.exports = router;

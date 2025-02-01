@@ -21,4 +21,21 @@ const authenticateToken = (req, res, next) => {
   });
 };
 
-module.exports = authenticateToken;
+// Middleware para verificar o token
+const verifyToken = (req, res, next) => {
+  const token = req.header("Authorization")?.split(" ")[1]; // Captura o token JWT do cabeçalho
+
+  if (!token) return res.status(401).json({ error: "Acesso negado. Token não fornecido." });
+
+  try {
+    const decoded = jwt.verify(token, process.env.SECRET_KEY); // Decodifica o token
+    req.user = decoded; // Armazena os dados do usuário no objeto req
+    next();
+  } catch (err) {
+    res.status(403).json({ error: "Token inválido." });
+  }
+};
+
+
+
+module.exports = { authenticateToken, verifyToken };

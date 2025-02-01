@@ -60,3 +60,5 @@ CREATE TABLE flashcard_theme (
     theme_id INT NOT NULL,
     FOREIGN KEY (theme_id) REFERENCES themes(id)
 );
+
+ALTER TABLE favorite_flashcards ADD CONSTRAINT unique_favorite UNIQUE (user_id, flashcard_id);
