@@ -76,7 +76,7 @@ router.delete("/delete/:id", verifyToken, async (req, res) => {
   try {
     const { id } = req.params; // Recebe o id do flashcard a ser apagado
     const conn = await pool.getConnection();
-
+    
     const user_role = await conn.query("SELECT Role FROM users WHERE id = ?", [
       user_id,
     ]);
@@ -86,7 +86,10 @@ router.delete("/delete/:id", verifyToken, async (req, res) => {
         .status(403)
         .json({ error: "Apenas administradores podem apagar flashcards." });
     }
-
+    // Primeiro, apaga o flashcard das tabelas dependentes
+    await conn.query("DELETE FROM favorite_flashcards WHERE flashcard_id = ?", [id]);
+    await conn.query("DELETE FROM flashcard_theme WHERE flashcard_id = ?", [id]);
+    // Apaga o flashcard
     const result = await conn.query("DELETE FROM flashcards WHERE id = ?", [
       id,
     ]);
